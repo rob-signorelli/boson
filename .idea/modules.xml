@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/boson.iml" filepath="$PROJECT_DIR$/boson.iml" />
+      <module fileurl="file://$PROJECT_DIR$/boson-core/boson-core.iml" filepath="$PROJECT_DIR$/boson-core/boson-core.iml" />
+      <module fileurl="file://$PROJECT_DIR$/boson-examples/boson-examples.iml" filepath="$PROJECT_DIR$/boson-examples/boson-examples.iml" />
+      <module fileurl="file://$PROJECT_DIR$/boson-http/boson-http.iml" filepath="$PROJECT_DIR$/boson-http/boson-http.iml" />
+      <module fileurl="file://$PROJECT_DIR$/boson-rabbitmq/boson-rabbitmq.iml" filepath="$PROJECT_DIR$/boson-rabbitmq/boson-rabbitmq.iml" />
+    </modules>
+  </component>
+</project>
