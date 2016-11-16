@@ -3,7 +3,6 @@ package boson;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -46,14 +45,7 @@ public class Futures
      */
     public static <T> T await(CompletableFuture<T> future)
     {
-        try
-        {
-            return future.get();
-        }
-        catch (InterruptedException | ExecutionException e)
-        {
-            throw new RuntimeException(e);
-        }
+        return future.join();
     }
 
     /**
@@ -62,7 +54,9 @@ public class Futures
      */
     public static void awaitAll(CompletableFuture<?>... futures)
     {
-        await(CompletableFuture.allOf(futures));
+        CompletableFuture.allOf(futures)
+            .exceptionally(e -> null)
+            .join();
     }
 
     /**
