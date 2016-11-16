@@ -91,6 +91,46 @@ This is not the first library to facilitate service communication and it won't b
 
 FAQs
 ---------------
+
+###Does the HTTP Transport Support HTTPS?
+Absolutely, it does! When building the configuration for your service consumer or implementation, just change the URI to start w/ "https://" instead of "http://". The service implementation requires one additional configuration option; the keystore that we'll use to sign each request.
+
+Here is the one change required when registering a remote implementation via ```Services.implement()```
+```java
+// Here's how you set up a plain-text HTTP implementation:
+new ServiceBusConfig()
+    .uri("http://localhost:5454");
+
+// To enable HTTPS instead...
+new ServiceBusConfig()
+    .uri("https://localhost:5454")
+    .keystore("/path/to/keystore", "keystore-password");
+```
+
+On the service consumer side, just pass this configuration to ```Services.consume()```:
+
+```java
+// To consume the service over plain-text HTTP
+new ServiceBusConfig()
+    .uri("http://localhost:5454");
+
+// It's literally a 1 character change to consume the service over HTTPS
+new ServiceBusConfig()
+    .uri("https://localhost:5454");
+```
+
+###Can I Use a Self-Signed Certificate With My HTTPS Transport?
+If that's your prerogative, that is supported, but not by default. To lock things down as much as possible, we disable that functionality with default configuration. You can tell Boson to allow self signed certificates when registering your service consumer by adding ```canSelfSign()``` to the configuration.
+ 
+```java
+HelloService service = Futures.await(services.consume(
+    HelloService.class,
+    new HttpTransportBindings<>(),
+    new ServiceBusConfig().uri("https://localhost:5454").canSelfSign()));
+```
+
+That last ```.canSelfSign()``` forces Boson to use a custom ```SSLSocketFactory``` which allows your self signed certs. This is NOT a VM-wide setting as it only applies to Boson transport connections. Any other HTTPS requests your application might make (to consume some remote API or something) is bound by the default SSL rules or whatever you set up. Boson works independently so you can open up self-signing for Boson but not your entire application.
+
 ###HTTP Transport: Can I Set Jetty's Logging Level?
 
 When developing your services you'd like to be able to run your code w/ DEBUG or TRACE level logging. The problem is that Jetty's internal "debug" logging is so ungodly chatty that it's impossible to follow your own code. If you're using the simple SLF4J binding, you can add these arguments to your command to give your app TRACE logging while Jetty stays quiet with only INFO:
