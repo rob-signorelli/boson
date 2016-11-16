@@ -9,10 +9,16 @@ import boson.transport.ServiceBusDispatcher;
 import boson.transport.ServiceBusDispatcherAdapter;
 import org.slf4j.Logger;
 
+import javax.net.ssl.*;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.SocketTimeoutException;
 import java.net.URL;
+import java.security.KeyManagementException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SecureRandom;
+import java.security.cert.X509Certificate;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -22,6 +28,9 @@ import java.util.concurrent.CompletableFuture;
 class HttpServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T> implements ServiceBusDispatcher<T>
 {
     private static Logger logger = Utils.logger(HttpServiceBusDispatcher.class);
+
+    private SSLSocketFactory sslSocketFactory;
+    private boolean https;
 
     /**
      * Locates the consumer for the service that's floating around in this VM somewhere (technically this class loader)
@@ -58,9 +67,7 @@ class HttpServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T> impleme
     {
         try
         {
-            // TODO: Allow HTTPS
-            URL obj = config.getUri().toURL();
-            HttpURLConnection connection = (HttpURLConnection) obj.openConnection();
+            HttpURLConnection connection = createConnection(config.getUri().toURL());
             connection.setRequestMethod("POST");
             connection.setRequestProperty("User-Agent", "Boson-Service-Transport");
             connection.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
@@ -96,14 +103,38 @@ class HttpServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T> impleme
     }
 
     /**
+     * Open a socket connection to the given URL
+     * @param url The endpoint to connect to
+     * @return The newly opened connection
+     */
+    protected HttpURLConnection createConnection(URL url) throws IOException
+    {
+        HttpURLConnection connection = (HttpURLConnection)url.openConnection();
+        if (https)
+        {
+            ((HttpsURLConnection)connection).setSSLSocketFactory(sslSocketFactory);
+        }
+        return connection;
+    }
+
+    /**
      * Http connections are set up at invocation time so there's not much to do here other than mark ourselves as connected.
      * @return A future that resolves once all setup activities have been completed
      */
     @Override
     public CompletableFuture<ServiceBusDispatcher<T>> connect()
     {
-        connected = true;
-        return Futures.of(this);
+        return Futures.supply(() -> {
+            https = config.getUri().getScheme().equals("https");
+
+            // This socket factory will be used for every connection we create
+            sslSocketFactory = https && config.isSelfSignedCertificate()
+                ? createTrustAllSocketFactory()
+                : HttpsURLConnection.getDefaultSSLSocketFactory();
+
+            connected = true;
+            return this;
+        });
     }
 
     /**
@@ -113,7 +144,37 @@ class HttpServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T> impleme
     @Override
     public CompletableFuture<ServiceBusDispatcher<T>> disconnect()
     {
-        connected = false;
-        return Futures.of(this);
+        return Futures.supply(() -> {
+            connected = false;
+            sslSocketFactory = null;
+            return this;
+        });
+    }
+
+    // --------------- HTTPS Support ---------------------------------
+
+    /**
+     * This creates a socket factory which will accept certificates signed by anyone, even yourself. It enables you
+     * to use self-signed certificates for the HTTPS transport.
+     * @return A newly created socket factory
+     */
+    protected SSLSocketFactory createTrustAllSocketFactory()
+    {
+        try
+        {
+            TrustManager trustManager = new X509TrustManager() {
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() { return null; }
+                public void checkClientTrusted(X509Certificate[] certs, String authType) { }
+                public void checkServerTrusted(X509Certificate[] certs, String authType) { }
+            };
+
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, new TrustManager[]{ trustManager }, new SecureRandom());
+            return sc.getSocketFactory();
+        }
+        catch (KeyManagementException | NoSuchAlgorithmException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

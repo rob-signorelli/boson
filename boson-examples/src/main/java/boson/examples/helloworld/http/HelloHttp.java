@@ -22,12 +22,19 @@ public class HelloHttp
     {
         logger.info("HelloHttp Starting");
 
+        // Using HTTPS is simply triggered by using the appropriate URI. The 'canSelfSign()' is optional but since
+        // we are using locally generated keys for this test program we need it. If you're using a cert from some third
+        // party CA then you can happily remove it.
+        ServiceBusConfig config = (args.length > 0 && "https".equals(args[0]))
+            ? new ServiceBusConfig().uri("https://localhost:5454").canSelfSign()
+            : new ServiceBusConfig().uri("http://localhost:5454");
+
         // Connect to the remote HelloService using the HTTP transport
         Services services = new Services();
         HelloService service = Futures.await(services.consume(
             HelloService.class,
             new HttpTransportBindings<>(),
-            new ServiceBusConfig().uri("http://localhost:5454")));
+            config));
 
         // Wait for all of the tests to run then shut down all of the services
         Futures.awaitAll(

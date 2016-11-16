@@ -6,16 +6,16 @@ import boson.services.ServiceRequest;
 import boson.services.ServiceResponse;
 import boson.transport.ServiceBusReceiver;
 import boson.transport.ServiceBusReceiverAdapter;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.server.*;
 import org.eclipse.jetty.server.handler.AbstractHandler;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.eclipse.jetty.util.thread.ExecutorThreadPool;
 import org.slf4j.Logger;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.concurrent.CompletableFuture;
@@ -50,11 +50,16 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
             logger.info("Starting http server on port {}", config.getUri().getPort());
             service = instance;
             httpServer = new Server(new ExecutorThreadPool(config.getThreadPool()));
-            ServerConnector http = new ServerConnector(httpServer);
-            http.setHost("localhost");
-            http.setPort(config.getUri().getPort());
-            http.setIdleTimeout(config.getRequestTimeToLive().toMillis());
-            httpServer.addConnector(http);
+
+            /*
+             * This is not a public-facing web server so we're not going to bother supporting HTTP & HTTPS at the same
+             * time. You either want to communicate securely through this bus's transport or you don't, so only attach
+             * the one correct connector for your configuration.
+             */
+            httpServer.addConnector(Utils.hasValue(config.getKeystorePath())
+                ? createHttpsConnector()
+                : createHttpConnector());
+
             httpServer.setHandler(new IncomingHttpRequestHandler());
             httpServer.start();
             return Futures.of(this);
@@ -65,6 +70,44 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
             httpServer = null;
             return Futures.error(t);
         }
+    }
+
+    /**
+     * Factory to create the connector that accepts incoming HTTP connections (non-secure).
+     * @return The constructed connector based on your configuration
+     */
+    protected ServerConnector createHttpConnector()
+    {
+        ServerConnector http = new ServerConnector(httpServer);
+//        http.setHost("localhost");
+        http.setPort(config.getUri().getPort());
+        http.setIdleTimeout(config.getRequestTimeToLive().toMillis());
+        return http;
+    }
+
+    /**
+     * Utilizes the keystore specified in your configuration to create a connector that accepts secure
+     * incoming HTTPS connections.
+     * @return The constructed connector based on your configuration
+     */
+    protected ServerConnector createHttpsConnector()
+    {
+        File keystoreFile = new File(config.getKeystorePath());
+        if (!keystoreFile.exists())
+            throw new IllegalStateException("Keystore not found found: " + config.getKeystorePath());
+
+        HttpConfiguration httpConfig = new HttpConfiguration();
+        httpConfig.addCustomizer(new SecureRequestCustomizer());
+
+        SslContextFactory sslContextFactory = new SslContextFactory();
+        sslContextFactory.setKeyStorePath(keystoreFile.getAbsolutePath());
+        sslContextFactory.setKeyStorePassword(config.getKeystorePassword());
+        ServerConnector sslConnector = new ServerConnector(httpServer,
+            new SslConnectionFactory(sslContextFactory, "http/1.1"),
+            new HttpConnectionFactory(httpConfig));
+
+        sslConnector.setPort(config.getUri().getPort());
+        return sslConnector;
     }
 
     /**
@@ -103,8 +146,6 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
          * @param request The Jetty request data
          * @param httpRequest The abstracted servlet request data
          * @param httpResponse The abstracted servlet response we'll use to give the caller their result
-         * @throws IOException
-         * @throws ServletException
          */
         @Override
         public void handle(String target,

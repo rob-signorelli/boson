@@ -23,6 +23,9 @@ public class ServiceBusConfig
     private String password;
     private Duration requestTimeToLive;
     private ExecutorService threadPool;
+    private String keystorePath;
+    private String keystorePassword;
+    private boolean selfSignedCertificate;
 
     public ServiceBusConfig()
     {
@@ -105,6 +108,40 @@ public class ServiceBusConfig
     public void setThreadPool(ExecutorService threadPool) { this.threadPool = threadPool; }
 
     /**
+     * @return When performing secure communication this is the keystore to use for encryption/decryption
+     */
+    public String getKeystorePath() { return keystorePath; }
+
+    /**
+     * @return The password used to unlock the keystore for secure communication
+     */
+    public String getKeystorePassword() { return keystorePassword; }
+
+    /**
+     * Sets the keystore password to use to access the keystore specified by 'keystorePath'
+     * @param keystorePassword The password to apply
+     */
+    public void setKeystorePassword(String keystorePassword) { this.keystorePassword = keystorePassword; }
+
+    /**
+     * Sets the keystore used for secure communication with the transport (e.g. HTTPS keys)
+     * @param keystorePath The path to the keystore
+     */
+    public void setKeystorePath(String keystorePath) { this.keystorePath = keystorePath; }
+
+    /**
+     * @return Will the service dispatcher/consumer allow authentication from self-signed certificates? (default=false)
+     */
+    public boolean isSelfSignedCertificate() { return selfSignedCertificate; }
+
+    /**
+     * When using a 'keystore' for transport encryption, will we allow you to use a self-signed certificate or must it
+     * be verified by a third-party certificate authority (CA)?
+     * @param flag Allow self-signing or not
+     */
+    public void setSelfSignedCertificate(boolean flag) { this.selfSignedCertificate = flag; }
+
+    /**
      * Chaining support. Sets the URI the we'll use to connect to the service bus
      * @param uri The transport protocol encoded URI
      * @return this
@@ -167,6 +204,40 @@ public class ServiceBusConfig
     public ServiceBusConfig threadPool(ExecutorService threadPool)
     {
         setThreadPool(threadPool);
+        return this;
+    }
+
+    /**
+     * Chaining support. Specifies the keystore to use in secure communication through the transport
+     * @param path The path to the keystore
+     * @return this
+     */
+    public ServiceBusConfig keystore(String path)
+    {
+        return keystore(path, "");
+    }
+
+    /**
+     * Chaining support. Specifies the keystore to use in secure communication through the transport
+     * @param path The path to the keystore
+     * @param password The password to unlock the keystore
+     * @return this
+     */
+    public ServiceBusConfig keystore(String path, String password)
+    {
+        setKeystorePath(path);
+        setKeystorePassword(password);
+        return this;
+    }
+
+    /**
+     * Chaining support. Allows a dispatcher/consumer to accept self-signed certificates from the remote endpoint. You
+     * should only do this when you intend to lock all of your endpoints behind some protected, private network.
+     * @return this
+     */
+    public ServiceBusConfig canSelfSign()
+    {
+        setSelfSignedCertificate(true);
         return this;
     }
 }

@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -91,5 +92,24 @@ public class Futures
             .stream()
             .map(CompletableFuture::join)
             .collect(Collectors.toList()));
+    }
+
+    /**
+     * Safely executes your supplier in a try/catch so that any uncaught exceptions result in an 'exceptional' future. Keep
+     * in mind that this is SYNCHRONOUS, not async. If you want async then just simply use the standard 'CompletableFuture.supplyAsync()'
+     * method.
+     * @param supplier The work to produce the value to complete with
+     * @return The completed future
+     */
+    public static <T> CompletableFuture<T> supply(Supplier<T> supplier)
+    {
+        try
+        {
+            return of(supplier.get());
+        }
+        catch (Throwable t)
+        {
+            return error(t);
+        }
     }
 }
