@@ -2,6 +2,7 @@ package boson.transport;
 
 import boson.services.ServiceRequest;
 import boson.services.ServiceResponse;
+import boson.services.Services;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -37,6 +38,11 @@ public interface ServiceBusReceiver<T> extends Function<ServiceRequest, Completa
     ServiceBusConfig getConfig();
 
     /**
+     * @return The repository/manager that this service is a member of
+     */
+    Services getServices();
+
+    /**
      * Fires up the service transport's communication channel so that it can start to receive requests and feed them
      * to the given service.
      * @param service The actual service instance that we're going to intercept work for
@@ -51,6 +57,12 @@ public interface ServiceBusReceiver<T> extends Function<ServiceRequest, Completa
      */
     CompletableFuture<ServiceBusReceiver<T>> disconnect();
 
+    /**
+     * Chaining support. A back-pointer to the service manager that holds the service registration for this receiver.
+     * @param services The service manager/repository this service is a member of
+     * @return this
+     */
+    ServiceBusReceiver<T> in(Services services);
 
     /**
      * Chaining support. Your service may implement any number of interfaces. This tells us which of those interfaces defines the

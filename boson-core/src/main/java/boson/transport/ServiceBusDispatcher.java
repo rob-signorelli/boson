@@ -2,6 +2,7 @@ package boson.transport;
 
 import boson.services.ServiceRequest;
 import boson.services.ServiceResponse;
+import boson.services.Services;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
@@ -25,6 +26,11 @@ public interface ServiceBusDispatcher<T> extends Function<ServiceRequest, Comple
     ServiceBusConfig getConfig();
 
     /**
+     * @return The repository/manager that this service is a member of
+     */
+    Services getServices();
+
+    /**
      * Performs any connection setup and resource allocation required to open a line of communication using this
      * transport mechanism. For instance in a message queue-based transport this may involve setting up a response
      * queue and discovering the request queue.
@@ -38,6 +44,13 @@ public interface ServiceBusDispatcher<T> extends Function<ServiceRequest, Comple
      * @return A future that completes w/ this dispatcher once all resources have been released
      */
     CompletableFuture<ServiceBusDispatcher<T>> disconnect();
+
+    /**
+     * Chaining support. A back-pointer to the service manager that holds the service registration for this dispatcher.
+     * @param services The service manager/repository this service is a member of
+     * @return this
+     */
+    ServiceBusDispatcher<T> in(Services services);
 
     /**
      * Chaining support.  A given producer is responsible for dispatching requests for just one type of service. This

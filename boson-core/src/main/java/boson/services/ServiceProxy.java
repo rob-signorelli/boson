@@ -32,11 +32,15 @@ public class ServiceProxy<T> implements InvocationHandler
 
         ServiceRequest request = new ServiceRequest()
             .call(transport.getServiceContract(), method)
-            .args(arguments);
+            .args(arguments)
+            .context(Utils.getContext(transport.getServices()));
 
-        return transport.apply(request)
-            .thenCompose(response -> response.isSuccess()
+        return transport.apply(request).thenCompose(response -> {
+            // Restore your context as threads/whatever may have changed while the operation was in the waiting queue.
+            Utils.setContext(transport.getServices(), request.getContext());
+            return response.isSuccess()
                 ? Futures.of(response.getResult())
-                : Futures.error(response.getError()));
+                : Futures.error(response.getError());
+        });
     }
 }

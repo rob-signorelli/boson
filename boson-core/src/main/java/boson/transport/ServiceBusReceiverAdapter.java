@@ -4,6 +4,7 @@ import boson.Futures;
 import boson.Utils;
 import boson.services.ServiceRequest;
 import boson.services.ServiceResponse;
+import boson.services.Services;
 
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletableFuture;
@@ -16,6 +17,7 @@ public abstract class ServiceBusReceiverAdapter<T> implements ServiceBusReceiver
     protected T service;
     protected Class<T> serviceContract;
     protected ServiceBusConfig config;
+    protected Services services;
 
     /**
      * This is the service instance that the consumer is retrieving work for.
@@ -36,6 +38,12 @@ public abstract class ServiceBusReceiverAdapter<T> implements ServiceBusReceiver
      */
     @Override
     public ServiceBusConfig getConfig() { return config; }
+
+    /**
+     * @return The repository/manager that this service is a member of
+     */
+    @Override
+    public Services getServices() { return services; }
 
     /**
      * The display name of the service (the unqualified class name of the service contract)
@@ -72,6 +80,19 @@ public abstract class ServiceBusReceiverAdapter<T> implements ServiceBusReceiver
         return this;
     }
 
+    /**
+     * Chaining support. A back-pointer to the service manager that holds the service registration for this receiver.
+     * @param services The service manager/repository this service is a member of
+     * @return this
+     */
+    @Override
+    public ServiceBusReceiver<T> in(Services services)
+    {
+        this.services = services;
+        return this;
+    }
+
+
     // --------------------------------------------------------------------------------------------------------
     // Using reflection to invoke a method on an object should be relatively common regardless of the transport
     // mechanism you use. However you manage to receive the request, feed it here to perform the standard
@@ -95,7 +116,8 @@ public abstract class ServiceBusReceiverAdapter<T> implements ServiceBusReceiver
 
         try
         {
-
+            // Make sure the principal/authorization information is applied before physically invoking the method
+            Utils.setContext(services, request.getContext());
             Method method = service.getClass().getMethod(
                 request.getMethodName(),
                 request.getArgumentTypes());

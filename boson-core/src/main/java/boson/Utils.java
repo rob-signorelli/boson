@@ -1,5 +1,7 @@
 package boson;
 
+import boson.services.ServiceContextProvider;
+import boson.services.Services;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -207,5 +209,31 @@ public class Utils
     public static boolean hasValue(String text)
     {
         return (text != null) && text.trim().length() > 0;
+    }
+
+    /**
+     * Null-safe helper that returns the current context. This will return 'null' if there is no context provider for
+     * the given service repository.
+     * @param services The service repository where we'll pull the context provider from
+     * @param <T> The type describing the context
+     * @return The current security/authorization context (may be null)
+     */
+    public static <T> T getContext(Services services)
+    {
+        ServiceContextProvider<T> provider = services.getContextProvider();
+        return (provider == null) ? null : provider.getContext();
+    }
+
+    /**
+     * Null-safe helper that updates the current context within the given service repository. If you've set the context
+     * provider to null, this is effectively a noop.
+     * @param services The service repository whose context provider we'll use to apply the given context
+     * @param <T> The type describing the context
+     */
+    public static <T> void setContext(Services services, T context)
+    {
+        ServiceContextProvider<T> provider = services.getContextProvider();
+        if (provider != null)
+            provider.setContext(context);
     }
 }
