@@ -79,7 +79,6 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
     protected ServerConnector createHttpConnector()
     {
         ServerConnector http = new ServerConnector(httpServer);
-//        http.setHost("localhost");
         http.setPort(config.getUri().getPort());
         http.setIdleTimeout(config.getRequestTimeToLive().toMillis());
         return http;
@@ -176,6 +175,18 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
                 {
                     logger.error("Uncaught HTTP transport exception", t);
                 }
+            }
+
+            /*
+             * This can be used by load balancer health checks. For instance you can set up a health check that lets
+             * this instance stay in the server pool as long as "GET /ping" returns a 200. This doesn't return any content
+             * to keep the response as lightweight as possible.
+             */
+            if ("GET".equalsIgnoreCase(httpRequest.getMethod()) && "/ping".equals(target))
+            {
+                httpResponse.setStatus(200);
+                httpResponse.setContentLengthLong(0);
+                request.setHandled(true);
             }
         }
     }
