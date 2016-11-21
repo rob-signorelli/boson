@@ -60,7 +60,7 @@ class RabbitMQServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T>
                 .build();
 
             // Request queue name is the fully qualified service contract interface, not just the simple name
-            byte[] requestBytes = config.getSerializationEngine().toBytes(request);
+            byte[] requestBytes = config.getSerializationEngine().objectToBytes(request);
             queueClient.getChannel().basicPublish("", getServiceContract().getName(), properties, requestBytes);
             return response;
         }
@@ -129,7 +129,8 @@ class RabbitMQServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T>
                 if (logger.isTraceEnabled())
                     logger.trace("[{}] Response received, routing to correct future.", getServiceName());
 
-                responseRouter.completeRoute(config.getSerializationEngine().fromBytes(responseBytes));
+                responseRouter.completeRoute(config.getSerializationEngine()
+                    .bytesToObject(ServiceResponse.class, responseBytes));
             }
             catch (InterruptedException | ShutdownSignalException e)
             {

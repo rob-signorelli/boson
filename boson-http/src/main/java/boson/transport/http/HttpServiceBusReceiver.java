@@ -156,7 +156,9 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
             {
                 try
                 {
-                    ServiceRequest serviceRequest = Utils.deserialize(httpRequest.getInputStream());
+                    ServiceRequest serviceRequest = config.getSerializationEngine()
+                        .streamToObject(ServiceRequest.class, httpRequest.getInputStream());
+
                     if (logger.isTraceEnabled())
                     {
                         logger.trace("HTTP service request received: {}.{}",
@@ -165,11 +167,7 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
                     }
 
                     ServiceResponse serviceResponse = Futures.await(apply(serviceRequest));
-                    OutputStream responseData = httpResponse.getOutputStream();
-                    httpResponse.setStatus(200);
-                    responseData.write(config.getSerializationEngine().toBytes(serviceResponse));
-                    responseData.flush();
-                    responseData.close();
+                    respond(httpResponse, serviceResponse);
                 }
                 catch (Throwable t)
                 {
@@ -188,6 +186,23 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
                 httpResponse.setContentLengthLong(0);
                 request.setHandled(true);
             }
+        }
+
+        /**
+         * Writes the response to the transport bus back to the caller
+         * @param httpResponse Contains the output stream where we'll write the response bytes
+         * @param serviceResponse The response encapsulation
+         * @throws IOException If there are issues w/ the HTTP connection
+         */
+        protected void respond(HttpServletResponse httpResponse, ServiceResponse serviceResponse) throws IOException
+        {
+            // We're going to respond w/ 200 no matter what. Even failures should respond successfully over the
+            // transport back to the caller. Analyzing the ServiceResponse should trigger failure on the client.
+            OutputStream responseData = httpResponse.getOutputStream();
+            httpResponse.setStatus(200);
+            responseData.write(config.getSerializationEngine().objectToBytes(serviceResponse));
+            responseData.flush();
+            responseData.close();
         }
     }
 }

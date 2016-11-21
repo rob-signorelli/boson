@@ -109,7 +109,7 @@ class RabbitMQServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
 
             // The RabbitMQ client doesn't support stream-based bodies, so we need to realize the entire byte array.
             byte [] messageBody = queueClient.getQueueConsumer().nextDelivery().getBody();
-            return config.getSerializationEngine().fromBytes(messageBody);
+            return config.getSerializationEngine().bytesToObject(ServiceRequest.class, messageBody);
         }
         catch (ShutdownSignalException e)
         {
@@ -163,7 +163,7 @@ class RabbitMQServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
                 .build();
 
             // The RabbitMQ client doesn't support streams so it has to be a fully realized by array
-            byte[] responseBytes = config.getSerializationEngine().toBytes(response);
+            byte[] responseBytes = config.getSerializationEngine().objectToBytes(response);
             queueClient.getChannel().basicPublish("", response.getCorrelation(), properties, responseBytes);
         }
         catch (Throwable t)
