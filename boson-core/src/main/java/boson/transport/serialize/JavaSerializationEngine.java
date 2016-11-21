@@ -16,7 +16,7 @@ public class JavaSerializationEngine implements SerializationEngine
      * @return The resulting bytes
      */
     @Override
-    public byte[] toBytes(Serializable obj) throws IOException
+    public byte[] objectToBytes(Serializable obj) throws IOException
     {
         if (obj != null)
         {
@@ -32,12 +32,13 @@ public class JavaSerializationEngine implements SerializationEngine
 
     /**
      * Reverses the serialization process, taking the serialized bytes and turning it back into the original POJO
+     * @param type The type of the resulting deserialized object
      * @param bytes The serialized bytes
      * @return The original POJO
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T fromBytes(byte[] bytes) throws IOException, ClassNotFoundException
+    public <T> T bytesToObject(Class<T> type, byte[] bytes) throws IOException, ClassNotFoundException
     {
         if (bytes != null && bytes.length > 0)
         {
@@ -52,12 +53,13 @@ public class JavaSerializationEngine implements SerializationEngine
 
     /**
      * Reverses the serialization process, taking the serialized bytes and turning it back into the original POJO
+     * @param type The type of the resulting deserialized object
      * @param bytes The serialized bytes
      * @return The original POJO
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T fromBytes(InputStream bytes) throws IOException, ClassNotFoundException
+    public <T> T streamToObject(Class<T> type, InputStream bytes) throws IOException, ClassNotFoundException
     {
         if (bytes != null)
         {

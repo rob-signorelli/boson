@@ -93,33 +93,6 @@ public class Utils
     }
 
     /**
-     * Reconstitutes an instance of T from the serialized bytes provided. This is a dumb implementation that fully trusts
-     * that the bytes (A) represent a serialized object and (B) that when put back together is really an instance of T,
-     * so it's possible to get a ClassCastException if you're being stupid/careless.
-     * @param serializedBytes The raw bytes of the serialized instance (output of the <code>Utils.serialize()</code> method)
-     * @return The original POJO, now reconstituted from the bytes
-     * @throws ClassNotFoundException If the deserialized object is not in this class loader's classpath.
-     * @throws IOException If anything else goes wrong during the deserialization process
-     * @throws ClassCastException If you were dumb and the resulting object wasn't actually an instance of type T.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T deserialize(InputStream serializedBytes) throws ClassNotFoundException, IOException
-    {
-        if (serializedBytes != null)
-        {
-            try (ObjectInputStream in = new ObjectInputStream(serializedBytes))
-            {
-                return (T)in.readObject();
-            }
-            finally
-            {
-                close(serializedBytes);
-            }
-        }
-        return null;
-    }
-
-    /**
      * Quietly close the given resource. It doesn't matter if the resource is null, already closed, or just barfs in
      * the process - this will give it the old college try.
      * @param closeable The resource you want to close/dispose.

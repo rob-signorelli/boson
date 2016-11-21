@@ -75,7 +75,7 @@ class HttpServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T> impleme
             // The body of the POST is just the serialized bytes of the ServiceRequest instance
             connection.setDoOutput(true);
             OutputStream postData = connection.getOutputStream();
-            postData.write(config.getSerializationEngine().toBytes(request));
+            postData.write(config.getSerializationEngine().objectToBytes(request));
             postData.flush();
             postData.close();
 
@@ -83,7 +83,8 @@ class HttpServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T> impleme
             int responseCode = connection.getResponseCode();
             if (responseCode >= 200 && responseCode <= 299)
             {
-                future.complete(Utils.deserialize(connection.getInputStream()));
+                future.complete(config.getSerializationEngine()
+                    .streamToObject(ServiceResponse.class, connection.getInputStream()));
             }
             else
             {
