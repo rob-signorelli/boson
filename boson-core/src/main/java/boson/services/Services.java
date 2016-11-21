@@ -30,11 +30,14 @@ public class Services
     private Map<Class<?>, ConsumedService> consumedServices;
     /** A lookup for all service that this container has real implementations for */
     private Map<Class<?>, ServiceBusReceiver<?>> implementedServices;
+    /** Wrangles authorization/principal information across calls made to any service in this repository */
+    private ServiceContextProvider<?> contextProvider;
 
     public Services()
     {
         consumedServices = new HashMap<>();
         implementedServices = new HashMap<>();
+        contextProvider = new ThreadLocalServiceContextProvider<>();
     }
 
     /**
@@ -49,6 +52,29 @@ public class Services
     {
         ConsumedService consumedService = consumedServices.get(serviceType);
         return (consumedService == null) ? null : (T)consumedService.serviceProxy;
+    }
+
+    /**
+     * Applies the given context provider to all services in this repository.
+     * @param provider The context provider to use
+     * @param <T> The type defining what a "context" looks like
+     * @return this
+     */
+    public <T> Services withProvider(ServiceContextProvider<T> provider)
+    {
+        this.contextProvider = provider;
+        return this;
+    }
+
+    /**
+     * Retrieves the context provider for this family of services
+     * @param <T> The type defining what a "context" looks like
+     * @return The provider
+     */
+    @SuppressWarnings("unchecked")
+    public <T> ServiceContextProvider<T> getContextProvider()
+    {
+        return (ServiceContextProvider<T>)contextProvider;
     }
 
     /**
@@ -77,6 +103,7 @@ public class Services
 
         logger.info("Creating proxy service {} -> {}", serviceContract, transport);
         return transport.dispatcher(serviceContract, config)
+            .in(this)
             .connect()
             .thenApply(dispatcher -> {
                 ConsumedService consumedService = new ConsumedService();
@@ -113,6 +140,7 @@ public class Services
 
         logger.info("Implementing service {} -> {}", serviceContract, transport);
         return transport.receiver(serviceContract, config)
+            .in(this)
             .connect(service)
             .thenApply(receiver -> {
                 implementedServices.put(receiver.getServiceContract(), receiver);

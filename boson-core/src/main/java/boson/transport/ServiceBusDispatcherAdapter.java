@@ -1,10 +1,13 @@
 package boson.transport;
 
+import boson.services.Services;
+
 /**
  * Manages the common book-keeping tasks required by most producer implementations.
  */
 public abstract class ServiceBusDispatcherAdapter<T> implements ServiceBusDispatcher<T>
 {
+    protected Services services;
     protected Class<T> serviceContract;
     protected boolean connected;
     protected ServiceBusConfig config;
@@ -21,6 +24,12 @@ public abstract class ServiceBusDispatcherAdapter<T> implements ServiceBusDispat
      */
     @Override
     public ServiceBusConfig getConfig() { return config; }
+
+    /**
+     * @return The repository/manager that this service is a member of
+     */
+    @Override
+    public Services getServices() { return services; }
 
     /**
      * Chaining support.  A given producer is responsible for dispatching requests for just one type of service. This
@@ -46,6 +55,18 @@ public abstract class ServiceBusDispatcherAdapter<T> implements ServiceBusDispat
     public ServiceBusDispatcher<T> config(ServiceBusConfig config)
     {
         this.config = config;
+        return this;
+    }
+
+    /**
+     * Chaining support. A back-pointer to the service manager that holds the service registration for this dispatcher.
+     * @param services The service manager/repository this service is a member of
+     * @return this
+     */
+    @Override
+    public ServiceBusDispatcher<T> in(Services services)
+    {
+        this.services = services;
         return this;
     }
 

@@ -21,6 +21,7 @@ public class ServiceRequest implements Serializable
     private Object[] arguments;
     private String correlation;
     private Instant expires;
+    private Object context;
 
     public ServiceRequest()
     {
@@ -139,6 +140,17 @@ public class ServiceRequest implements Serializable
     }
 
     /**
+     * @return The authorization/security context to send along to the remote call
+     */
+    public Object getContext() { return context; }
+
+    /**
+     * Sets the context that should be applied to the remote call
+     * @param context The context to send
+     */
+    public void setContext(Object context) { this.context = context; }
+
+    /**
      * Chaining support. Sets the correlation id/address for this request.
      * @param id The new value to apply
      * @return this
@@ -182,6 +194,17 @@ public class ServiceRequest implements Serializable
     public ServiceRequest args(Object[] arguments)
     {
         setArguments(arguments);
+        return this;
+    }
+
+    /**
+     * Chaining support. Applies the given security/authorization context to the request to be restored by the remote method.
+     * @param context The context to send and apply
+     * @return this
+     */
+    public ServiceRequest context(Object context)
+    {
+        setContext(context);
         return this;
     }
 
