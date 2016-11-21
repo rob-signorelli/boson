@@ -1,6 +1,8 @@
 package boson.transport;
 
 import boson.Utils;
+import boson.transport.serialize.JavaSerializationEngine;
+import boson.transport.serialize.SerializationEngine;
 
 import java.net.URI;
 import java.time.Duration;
@@ -26,12 +28,15 @@ public class ServiceBusConfig
     private String keystorePath;
     private String keystorePassword;
     private boolean selfSignedCertificate;
+    private SerializationEngine serializationEngine;
 
     public ServiceBusConfig()
     {
+        // We provide sane defaults that are good enough for the average application, but override as needed.
         setUri(URI.create("http://localhost:5454"));
         setRequestTimeToLive(Duration.ofMinutes(5));
         setThreadPool(Executors.newCachedThreadPool());
+        setSerializationEngine(new JavaSerializationEngine());
     }
 
     /**
@@ -142,6 +147,17 @@ public class ServiceBusConfig
     public void setSelfSignedCertificate(boolean flag) { this.selfSignedCertificate = flag; }
 
     /**
+     * @return The serialization engine we'll use to construct transportable byte arrays across services
+     */
+    public SerializationEngine getSerializationEngine() { return serializationEngine; }
+
+    /**
+     * Sets the serialization engine that we'll use to convert requests/responses into bytes to transmit.
+     * @param engine The engine to use
+     */
+    public void setSerializationEngine(SerializationEngine engine) { this.serializationEngine = engine; }
+
+    /**
      * Chaining support. Sets the URI the we'll use to connect to the service bus
      * @param uri The transport protocol encoded URI
      * @return this
@@ -238,6 +254,17 @@ public class ServiceBusConfig
     public ServiceBusConfig canSelfSign()
     {
         setSelfSignedCertificate(true);
+        return this;
+    }
+
+    /**
+     * Chaining support. Customizes the engine used to convert requests/responses into bytes to transmit over the wire.
+     * @param engine The engine to use
+     * @return this
+     */
+    public ServiceBusConfig serialize(SerializationEngine engine)
+    {
+        setSerializationEngine(engine);
         return this;
     }
 }

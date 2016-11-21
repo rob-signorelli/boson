@@ -2,8 +2,6 @@ package boson;
 
 import org.junit.Test;
 
-import java.io.NotSerializableException;
-
 import static org.junit.Assert.*;
 
 public class UtilsTest
@@ -41,29 +39,6 @@ public class UtilsTest
 
         IllegalStateException c = Utils.illegalState("It broke %s because of %s", "hard", "bugs");
         assertEquals("Incorrect formatted message", "It broke hard because of bugs", c.getMessage());
-    }
-
-    @Test
-    public void serialize() throws Exception
-    {
-        String text = "hello world";
-        byte[] textBytes = Utils.serialize(text);
-        assertNotNull(textBytes);
-        assertEquals("Serialized text bytes incorrect size", 18, textBytes.length);
-    }
-
-    @Test (expected = NotSerializableException.class)
-    public void serializeNonserializable() throws Exception
-    {
-        Utils.serialize(this);
-    }
-
-    @Test
-    public void deserialize() throws Exception
-    {
-        String original = "hello world";
-        byte[] bytes = Utils.serialize(original);
-        assertEquals("Improper deserialization", "hello world", Utils.deserialize(bytes));
     }
 
     @Test

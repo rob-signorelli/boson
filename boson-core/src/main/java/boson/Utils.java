@@ -93,49 +93,6 @@ public class Utils
     }
 
     /**
-     * Performs standard Java serialization to convert the given object into its serialized byte form.
-     * @param pojo The original object you want to serialize
-     * @return The bytes for this object (null object results in zero-length array, not null)
-     */
-    public static byte[] serialize(Object pojo) throws IOException
-    {
-        if (pojo != null)
-        {
-            try (ByteArrayOutputStream byteStream = new ByteArrayOutputStream(8192);
-                 ObjectOutputStream outputStream = new ObjectOutputStream(byteStream))
-            {
-                outputStream.writeObject(pojo);
-                return byteStream.toByteArray();
-            }
-        }
-        return new byte[0];
-    }
-
-    /**
-     * Reconstitutes an instance of T from the serialized bytes provided. This is a dumb implementation that fully trusts
-     * that the bytes (A) represent a serialized object and (B) that when put back together is really an instance of T,
-     * so it's possible to get a ClassCastException if you're being stupid/careless.
-     * @param serializedBytes The raw bytes of the serialized instance (output of the <code>Utils.serialize()</code> method)
-     * @return The original POJO, now reconstituted from the bytes
-     * @throws ClassNotFoundException If the deserialized object is not in this class loader's classpath.
-     * @throws IOException If anything else goes wrong during the deserialization process
-     * @throws ClassCastException If you were dumb and the resulting object wasn't actually an instance of type T.
-     */
-    @SuppressWarnings("unchecked")
-    public static <T> T deserialize(byte[] serializedBytes) throws ClassNotFoundException, IOException
-    {
-        if (serializedBytes != null && serializedBytes.length > 0)
-        {
-            try (ByteArrayInputStream bytes = new ByteArrayInputStream(serializedBytes);
-                 ObjectInputStream in = new ObjectInputStream(bytes))
-            {
-                return (T)in.readObject();
-            }
-        }
-        return null;
-    }
-
-    /**
      * Reconstitutes an instance of T from the serialized bytes provided. This is a dumb implementation that fully trusts
      * that the bytes (A) represent a serialized object and (B) that when put back together is really an instance of T,
      * so it's possible to get a ClassCastException if you're being stupid/careless.

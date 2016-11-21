@@ -167,7 +167,7 @@ class HttpServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
                     ServiceResponse serviceResponse = Futures.await(apply(serviceRequest));
                     OutputStream responseData = httpResponse.getOutputStream();
                     httpResponse.setStatus(200);
-                    responseData.write(Utils.serialize(serviceResponse));
+                    responseData.write(config.getSerializationEngine().toBytes(serviceResponse));
                     responseData.flush();
                     responseData.close();
                 }

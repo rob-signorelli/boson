@@ -75,7 +75,7 @@ class HttpServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T> impleme
             // The body of the POST is just the serialized bytes of the ServiceRequest instance
             connection.setDoOutput(true);
             OutputStream postData = connection.getOutputStream();
-            postData.write(Utils.serialize(request));
+            postData.write(config.getSerializationEngine().toBytes(request));
             postData.flush();
             postData.close();
 

@@ -107,7 +107,9 @@ class RabbitMQServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
             if (logger.isTraceEnabled())
                 logger.trace("[{}] Reading next request", getServiceName());
 
-            return Utils.deserialize(queueClient.getQueueConsumer().nextDelivery().getBody());
+            // The RabbitMQ client doesn't support stream-based bodies, so we need to realize the entire byte array.
+            byte [] messageBody = queueClient.getQueueConsumer().nextDelivery().getBody();
+            return config.getSerializationEngine().fromBytes(messageBody);
         }
         catch (ShutdownSignalException e)
         {
@@ -160,7 +162,9 @@ class RabbitMQServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
                 .expiration(String.valueOf("60000"))    // No need to make configurable. If call hasn't picked up its response in a minute, fuck it.
                 .build();
 
-            queueClient.getChannel().basicPublish("", response.getCorrelation(), properties, Utils.serialize(response));
+            // The RabbitMQ client doesn't support streams so it has to be a fully realized by array
+            byte[] responseBytes = config.getSerializationEngine().toBytes(response);
+            queueClient.getChannel().basicPublish("", response.getCorrelation(), properties, responseBytes);
         }
         catch (Throwable t)
         {
