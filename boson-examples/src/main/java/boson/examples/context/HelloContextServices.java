@@ -9,6 +9,8 @@ import boson.transport.ServiceBusConfig;
 import boson.transport.http.HttpTransportBindings;
 import org.slf4j.Logger;
 
+import java.util.Scanner;
+
 /**
  * Uses the HTTP transport to fire up a Boson-activated HelloService that is capable of receiving/logging user context
  * info that's automatically passed along with each request to the services we register here.
@@ -31,7 +33,7 @@ public class HelloContextServices
             new ServiceBusConfig().uri("http://localhost:5454")));
 
         logger.info("HelloContextServices up and running. Press ENTER to quit.");
-        System.console().readLine();
-        Futures.await(services.disconnectAll());
+        new Scanner(System.in).nextLine();
+        services.disconnectAll().join();
     }
 }

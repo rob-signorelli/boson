@@ -27,8 +27,8 @@ public class LocalClientAndServer {
         HelloService service = new SimpleHelloService();
 
         // Use the service in some meaningful way
-        service.say("Hello World").thenAccept(System.out::println).get();
-        service.say("hello world").thenAccept(System.out::println).get();
+        service.say("Hello World").thenAccept(System.out::println).join();
+        service.say("hello world").thenAccept(System.out::println).join();
     }
 }
 
@@ -64,11 +64,11 @@ public class HelloClient {
         HelloService service = serviceRepository.consume(
             HelloService.class,
             new HttpTransportBindings<>(),
-            new ServiceBusConfig().url("http://localhost:12345")).get();
+            new ServiceBusConfig().url("http://localhost:12345")).join();
 
         // EXACT SAME application code as before
-        service.say("Hello World").thenAccept(System.out::println).get();
-        service.say("hello world").thenAccept(System.out::println).get();
+        service.say("Hello World").thenAccept(System.out::println).join();
+        service.say("hello world").thenAccept(System.out::println).join();
     }
 }
 
@@ -84,10 +84,9 @@ Why Boson?
 This is not the first library to facilitate service communication and it won't be the last. Inspired by some of the minimalism offered by other libraries such as [Spark Framework](http://sparkjava.com), these are the motivations and principles that drive Boson's development.
 
  - **Minimal Setup**. You can copy/paste 2 lines of code into your existing application to get Boson up and running. If you've used Spring or JAX-XXX related APIs in the past you're probably used to adding annotations to nearly every single class, field, and method in your code. The beauty of Boson is that other than a few setup lines in ```main()``` you'd never know that your application was using it. This makes it easy to implement and easy to swap out should you want something more complex.
- - **Asynchronous Java 8**. This was a huge leap forward for the Java language, so we're not going to water down the API trying to support older VMs. We want lambdas, streams, and completable futures so that you can write beautiful, functional code. Remote services inherently have to deal with blocking I/O, so Boson makes it easy for you to plug in the thread pool or actor framework of your choice to best utilize your resources and maximize throughput.
+ - **Asynchronous Java 8**. This was a huge leap forward for the Java language, so we're not going to water down the API trying to support older VMs. We want lambdas, streams, and completable futures so that you can write beautiful, functional code. Remote services inherently have to deal with I/O, so Boson takes care of making that I/O asynchronous with no effort on your part. You focus on your business logic - Boson makes it fast, scalable, and modular.
  - **Remote-Procedure-Call (RPC) Style Services**. All service calls feel like local, native calls where you pass real Java objects to methods and get real Java objects back - despite all of the hidden complexity that handles remote communication. While you do still need to be mindful about what is remote and what's not to avoid latency, it's keeps the simple programming paradigm of "I call a method and get a result".
  - **No Config Files**. Everything is configured via code. That means your IDE's autocomplete shows you everything you need. You don't have to learn some archaic XML schema to get up and running. You're more than welcome to bury Boson configuration values in your app's own configuration and feed them to Boson at runtime.
- - **Minimal Dependencies**. Other than [Simple Logging Facade for Java](http://www.slf4j.org/), the Boson jars are all you need. You only include Boson jars for the transports you require and you can still bring your own logger. We promise never to bloat your project with 8 additional Apache Commons libraries so that we can avoid doing 1 mildly annoying task.
 
 FAQs
 ---------------

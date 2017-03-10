@@ -11,6 +11,7 @@ import boson.transport.ServiceBusConfig;
 import boson.transport.http.HttpTransportBindings;
 import org.slf4j.Logger;
 
+import java.util.Scanner;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -40,7 +41,7 @@ public class MixedServicesA
                 new ServiceBusConfig().uri("http://localhost:5679"))));
 
         logger.info("HelloService and MathService up and running over HTTP. Press ENTER to quit.");
-        System.console().readLine();
-        Futures.await(services.disconnectAll());
+        new Scanner(System.in).nextLine();
+        services.disconnectAll().join();
     }
 }

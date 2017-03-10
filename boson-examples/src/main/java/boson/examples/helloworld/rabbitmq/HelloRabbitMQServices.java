@@ -9,6 +9,8 @@ import boson.transport.ServiceBusConfig;
 import boson.transport.rabbitmq.RabbitMQTransportBindings;
 import org.slf4j.Logger;
 
+import java.util.Scanner;
+
 /**
  * Uses Boson to activate an instance of SimpleHelloService so that it can receive requests by polling a shared
  * requests queue from a RabbitMQ broker. After performing the "real" work, it will respond using one of the many
@@ -29,7 +31,7 @@ public class HelloRabbitMQServices
             new ServiceBusConfig().uri("rabbitmq://localhost:5672")));
 
         logger.info("Services up and running. Press ENTER to quit.");
-        System.console().readLine();
-        Futures.await(services.disconnectAll());
+        new Scanner(System.in).nextLine();
+        services.disconnectAll().join();
     }
 }

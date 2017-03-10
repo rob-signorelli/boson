@@ -11,4 +11,22 @@
 
     <artifactId>boson-http</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>boson.servicebus</groupId>
+            <artifactId>boson-core</artifactId>
+            <version>1.0-beta</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-core</artifactId>
+            <version>3.3.3</version>
+        </dependency>
+        <dependency>
+            <groupId>io.vertx</groupId>
+            <artifactId>vertx-web</artifactId>
+            <version>3.3.3</version>
+        </dependency>
+    </dependencies>
+
 </project>

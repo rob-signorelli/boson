@@ -52,7 +52,7 @@ public class HelloContext
         // Make sure that both Bob and Jane's tasks have completed
         Futures.awaitAll(bob, jane);
         logger.info("All tasks completed. Shutting down service connections.");
-        Futures.await(services.disconnectAll());
+        services.disconnectAll().join();
     }
 
     /**

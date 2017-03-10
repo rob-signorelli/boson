@@ -6,11 +6,11 @@ import boson.services.ServiceRequest;
 import boson.services.ServiceResponse;
 import boson.transport.ServiceBusReceiver;
 import boson.transport.ServiceBusReceiverAdapter;
+import boson.transport.serialize.SerializationException;
 import com.rabbitmq.client.AMQP.BasicProperties;
 import com.rabbitmq.client.ShutdownSignalException;
 import org.slf4j.Logger;
 
-import java.io.IOException;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -119,7 +119,7 @@ class RabbitMQServiceBusReceiver<T> extends ServiceBusReceiverAdapter<T>
         {
             logger.warn("[{}] Interrupted unexpectedly", getServiceName());
         }
-        catch (ClassNotFoundException | IOException e)
+        catch (SerializationException e)
         {
             logger.error(String.format("[%s] Unable to deserialize incoming request bytes", getServiceName()), e);
         }

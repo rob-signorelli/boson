@@ -41,6 +41,6 @@ public class HelloLocal
             service.say("Doc says hello").thenAccept(logger::info));
 
         logger.info("All tasks completed. Shutting down service connections.");
-        Futures.await(services.disconnectAll());
+        services.disconnectAll().join();
     }
 }

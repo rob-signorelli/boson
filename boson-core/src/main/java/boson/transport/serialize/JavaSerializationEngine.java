@@ -16,7 +16,7 @@ public class JavaSerializationEngine implements SerializationEngine
      * @return The resulting bytes
      */
     @Override
-    public byte[] objectToBytes(Serializable obj) throws IOException
+    public byte[] objectToBytes(Serializable obj)
     {
         if (obj != null)
         {
@@ -25,6 +25,10 @@ public class JavaSerializationEngine implements SerializationEngine
             {
                 outputStream.writeObject(obj);
                 return byteStream.toByteArray();
+            }
+            catch (Throwable t)
+            {
+                throw new SerializationException(t);
             }
         }
         return new byte[0];
@@ -38,7 +42,7 @@ public class JavaSerializationEngine implements SerializationEngine
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T bytesToObject(Class<T> type, byte[] bytes) throws IOException, ClassNotFoundException
+    public <T> T bytesToObject(Class<T> type, byte[] bytes)
     {
         if (bytes != null && bytes.length > 0)
         {
@@ -46,6 +50,10 @@ public class JavaSerializationEngine implements SerializationEngine
                  ObjectInputStream in = new ObjectInputStream(byteStream))
             {
                 return (T)in.readObject();
+            }
+            catch (Throwable t)
+            {
+                throw new SerializationException(t);
             }
         }
         return null;
@@ -59,13 +67,17 @@ public class JavaSerializationEngine implements SerializationEngine
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T streamToObject(Class<T> type, InputStream bytes) throws IOException, ClassNotFoundException
+    public <T> T streamToObject(Class<T> type, InputStream bytes)
     {
         if (bytes != null)
         {
             try (ObjectInputStream in = new ObjectInputStream(bytes))
             {
                 return (T)in.readObject();
+            }
+            catch (Throwable t)
+            {
+                throw new SerializationException(t);
             }
             finally
             {

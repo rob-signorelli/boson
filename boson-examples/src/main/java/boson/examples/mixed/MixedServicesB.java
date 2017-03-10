@@ -9,6 +9,8 @@ import boson.transport.ServiceBusConfig;
 import boson.transport.rabbitmq.RabbitMQTransportBindings;
 import org.slf4j.Logger;
 
+import java.util.Scanner;
+
 /**
  * Uses Boson to activate a single RandomService over a RabbitMQ transport.
  */
@@ -29,7 +31,7 @@ public class MixedServicesB
             new ServiceBusConfig().uri("rabbitmq://localhost:5672")));
 
         logger.info("RandomService up and running over RabbitMQ. Press ENTER to quit.");
-        System.console().readLine();
-        Futures.await(services.disconnectAll());
+        new Scanner(System.in).nextLine();
+        services.disconnectAll().join();
     }
 }

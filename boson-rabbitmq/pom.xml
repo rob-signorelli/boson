@@ -11,4 +11,17 @@
 
     <artifactId>boson-rabbitmq</artifactId>
 
+    <dependencies>
+        <dependency>
+            <groupId>boson.servicebus</groupId>
+            <artifactId>boson-core</artifactId>
+            <version>1.0-beta</version>
+        </dependency>
+        <dependency>
+            <groupId>com.rabbitmq</groupId>
+            <artifactId>amqp-client</artifactId>
+            <version>3.6.6</version>
+        </dependency>
+    </dependencies>
+
 </project>

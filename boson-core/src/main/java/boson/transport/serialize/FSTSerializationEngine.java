@@ -5,7 +5,6 @@ import boson.services.ServiceRequest;
 import boson.services.ServiceResponse;
 import org.nustaq.serialization.FSTConfiguration;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
 
@@ -30,11 +29,18 @@ public class FSTSerializationEngine implements SerializationEngine
      * @return The resulting bytes
      */
     @Override
-    public byte[] objectToBytes(Serializable obj) throws IOException
+    public byte[] objectToBytes(Serializable obj)
     {
-        return (obj != null)
-            ? FST.asByteArray(obj)
-            : new byte[0];
+        try
+        {
+            return (obj != null)
+                ? FST.asByteArray(obj)
+                : new byte[0];
+        }
+        catch (Throwable t)
+        {
+            throw new SerializationException(t);
+        }
     }
 
     /**
@@ -45,11 +51,18 @@ public class FSTSerializationEngine implements SerializationEngine
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T bytesToObject(Class<T> type, byte[] bytes) throws IOException, ClassNotFoundException
+    public <T> T bytesToObject(Class<T> type, byte[] bytes)
     {
-        return (bytes != null && bytes.length > 0)
-            ? (T)FST.asObject(bytes)
-            : null;
+        try
+        {
+            return (bytes != null && bytes.length > 0)
+                ? (T) FST.asObject(bytes)
+                : null;
+        }
+        catch (Throwable t)
+        {
+            throw new SerializationException(t);
+        }
     }
 
     /**
@@ -60,7 +73,7 @@ public class FSTSerializationEngine implements SerializationEngine
      */
     @Override
     @SuppressWarnings("unchecked")
-    public <T> T streamToObject(Class<T> type, InputStream bytes) throws IOException, ClassNotFoundException
+    public <T> T streamToObject(Class<T> type, InputStream bytes)
     {
         if (bytes != null)
         {
@@ -70,13 +83,9 @@ public class FSTSerializationEngine implements SerializationEngine
                 // object input stream instances in a thread-safe way so just do as the docs say and leave it open.
                 return (T)FST.getObjectInput(bytes).readObject(type);
             }
-            catch (RuntimeException | IOException | ClassNotFoundException e)
+            catch (Throwable t)
             {
-                throw e;
-            }
-            catch (Exception e)  // for some reason 'readObject()'
-            {
-                throw new IOException(e);
+                throw new SerializationException(t);
             }
             finally
             {

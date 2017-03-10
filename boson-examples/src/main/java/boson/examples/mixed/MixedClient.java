@@ -51,7 +51,7 @@ public class MixedClient
             randomTests(services));
 
         logger.info("All tasks completed. Shutting down service connections.");
-        Futures.await(services.disconnectAll());
+        services.disconnectAll().join();
     }
 
     /**

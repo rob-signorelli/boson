@@ -71,6 +71,7 @@ class HttpServiceBusDispatcher<T> extends ServiceBusDispatcherAdapter<T> impleme
             connection.setRequestMethod("POST");
             connection.setRequestProperty("User-Agent", "Boson-Service-Transport");
             connection.setRequestProperty("Accept-Language", "en-US,en;q=0.5");
+            connection.setRequestProperty("Content-Type", "application/x-java-serialized-object");
 
             // The body of the POST is just the serialized bytes of the ServiceRequest instance
             connection.setDoOutput(true);
